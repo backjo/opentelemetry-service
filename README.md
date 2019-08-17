@@ -159,7 +159,6 @@ receivers:
     address: "127.0.0.1:9411"
 
   jaeger:
-    jaeger-thrift-tchannel-port: 14267
     jaeger-thrift-http-port: 14268
 
   prometheus:
@@ -397,7 +396,7 @@ Flags:
       --logging-exporter              Flag to add a logging exporter (combine with log level DEBUG to log incoming spans)
       --metrics-level string          Output level of telemetry metrics (NONE, BASIC, NORMAL, DETAILED) (default "BASIC")
       --metrics-port uint             Port exposing telemetry. (default 8888)
-      --receive-jaeger                Flag to run the Jaeger receiver (i.e.: Jaeger Collector), default settings: {ThriftTChannelPort:14267 ThriftHTTPPort:14268}
+      --receive-jaeger                Flag to run the Jaeger receiver (i.e.: Jaeger Collector), default settings: {ThriftHTTPPort:14268}
       --receive-oc-trace              Flag to run the OpenTelemetry trace receiver, default settings: {Port:55678} (default true)
       --receive-zipkin                Flag to run the Zipkin receiver, default settings: {Port:9411}
       --receive-zipkin-scribe         Flag to run the Zipkin Scribe receiver, default settings: {Address: Port:9410 Category:zipkin}

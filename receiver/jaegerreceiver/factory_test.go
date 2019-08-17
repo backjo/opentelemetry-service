@@ -63,16 +63,6 @@ func TestCreateInvalidHTTPEndpoint(t *testing.T) {
 	assert.Error(t, err, "receiver creation with no endpoints must fail")
 }
 
-func TestCreateInvalidTChannelEndpoint(t *testing.T) {
-	factory := Factory{}
-	cfg := factory.CreateDefaultConfig()
-	rCfg := cfg.(*Config)
-
-	rCfg.Protocols[protoThriftTChannel].Endpoint = ""
-	_, err := factory.CreateTraceReceiver(context.Background(), zap.NewNop(), cfg, nil)
-	assert.Error(t, err, "receiver creation with invalid tchannel endpoint must fail")
-}
-
 func TestCreateNoPort(t *testing.T) {
 	factory := Factory{}
 	cfg := factory.CreateDefaultConfig()
@@ -100,7 +90,6 @@ func TestCreateNoProtocols(t *testing.T) {
 
 	delete(rCfg.Protocols, protoGRPC)
 	delete(rCfg.Protocols, protoThriftHTTP)
-	delete(rCfg.Protocols, protoThriftTChannel)
 	_, err := factory.CreateTraceReceiver(context.Background(), zap.NewNop(), cfg, nil)
 	assert.Error(t, err, "receiver creation with no protocols must fail")
 }
@@ -111,7 +100,6 @@ func TestCreateWithoutThrift(t *testing.T) {
 	rCfg := cfg.(*Config)
 
 	delete(rCfg.Protocols, protoThriftHTTP)
-	delete(rCfg.Protocols, protoThriftTChannel)
 	_, err := factory.CreateTraceReceiver(context.Background(), zap.NewNop(), cfg, nil)
 	assert.NoError(t, err, "receiver creation without the Thrift protocols must not fail")
 }

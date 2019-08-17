@@ -35,14 +35,12 @@ const (
 	typeStr = "jaeger"
 
 	// Protocol values.
-	protoGRPC           = "grpc"
-	protoThriftHTTP     = "thrift-http"
-	protoThriftTChannel = "thrift-tchannel"
+	protoGRPC       = "grpc"
+	protoThriftHTTP = "thrift-http"
 
 	// Default endpoints to bind to.
-	defaultGRPCBindEndpoint     = "127.0.0.1:14250"
-	defaultHTTPBindEndpoint     = "127.0.0.1:14268"
-	defaultTChannelBindEndpoint = "127.0.0.1:14267"
+	defaultGRPCBindEndpoint = "127.0.0.1:14250"
+	defaultHTTPBindEndpoint = "127.0.0.1:14268"
 )
 
 // Factory is the factory for Jaeger receiver.
@@ -68,9 +66,6 @@ func (f *Factory) CreateDefaultConfig() configmodels.Receiver {
 			protoGRPC: {
 				Endpoint: defaultGRPCBindEndpoint,
 			},
-			protoThriftTChannel: {
-				Endpoint: defaultTChannelBindEndpoint,
-			},
 			protoThriftHTTP: {
 				Endpoint: defaultHTTPBindEndpoint,
 			},
@@ -93,7 +88,6 @@ func (f *Factory) CreateTraceReceiver(
 
 	protoGRPC := rCfg.Protocols[protoGRPC]
 	protoHTTP := rCfg.Protocols[protoThriftHTTP]
-	protoTChannel := rCfg.Protocols[protoThriftTChannel]
 
 	config := Configuration{}
 
@@ -114,20 +108,11 @@ func (f *Factory) CreateTraceReceiver(
 		}
 	}
 
-	if protoTChannel != nil && protoTChannel.IsEnabled() {
-		var err error
-		config.CollectorThriftPort, err = extractPortFromEndpoint(protoTChannel.Endpoint)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if (protoGRPC == nil && protoHTTP == nil && protoTChannel == nil) ||
-		(config.CollectorGRPCPort == 0 && config.CollectorHTTPPort == 0 && config.CollectorThriftPort == 0) {
-		err := fmt.Errorf("either %v, %v, or %v protocol endpoint with non-zero port must be enabled for %s receiver",
+	if (protoGRPC == nil && protoHTTP == nil) ||
+		(config.CollectorGRPCPort == 0 && config.CollectorHTTPPort == 0) {
+		err := fmt.Errorf("either %v or %v protocol endpoint with non-zero port must be enabled for %s receiver",
 			protoGRPC,
 			protoThriftHTTP,
-			protoThriftTChannel,
 			typeStr,
 		)
 		return nil, err

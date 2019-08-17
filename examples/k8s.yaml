@@ -113,8 +113,6 @@ spec:
     port: 55678
     protocol: TCP
     targetPort: 55678
-#  - name: jaeger-tchannel
-#    port: 14267
 #  - name: jaeger-thrift-http
 #    port: 14268
 #  - name: zipkin
