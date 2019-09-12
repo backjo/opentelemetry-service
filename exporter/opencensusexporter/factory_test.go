@@ -16,6 +16,7 @@ package opencensusexporter
 
 import (
 	"context"
+	"github.com/open-telemetry/opentelemetry-service/exporter"
 	"testing"
 	"time"
 
@@ -82,7 +83,11 @@ func TestCreateTraceExporter(t *testing.T) {
 			name: "UseSecure",
 			config: Config{
 				Endpoint:  rcvCfg.Endpoint,
-				UseSecure: true,
+				SecureExporterSettings: exporter.SecureExporterSettings{
+					TLSSettings: &exporter.TLSSettings{
+						UseSecure: true,
+					},
+				},
 			},
 		},
 		{
@@ -139,14 +144,22 @@ func TestCreateTraceExporter(t *testing.T) {
 			name: "CertPemFile",
 			config: Config{
 				Endpoint:    rcvCfg.Endpoint,
-				CertPemFile: "testdata/test_cert.pem",
+				SecureExporterSettings: exporter.SecureExporterSettings{
+					TLSSettings: &exporter.TLSSettings{
+						CertPemFile:"testdata/test_cert.pem",
+					},
+				},
 			},
 		},
 		{
 			name: "CertPemFileError",
 			config: Config{
 				Endpoint:    rcvCfg.Endpoint,
-				CertPemFile: "nosuchfile",
+				SecureExporterSettings: exporter.SecureExporterSettings{
+					TLSSettings: &exporter.TLSSettings{
+						CertPemFile:"nosuchfile",
+					},
+				},
 			},
 			mustFail: true,
 		},

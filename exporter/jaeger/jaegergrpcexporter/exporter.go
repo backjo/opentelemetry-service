@@ -16,11 +16,12 @@ package jaegergrpcexporter
 
 import (
 	"context"
+	"github.com/open-telemetry/opentelemetry-service/config/configmodels"
+	"go.uber.org/zap"
 
 	jaegerproto "github.com/jaegertracing/jaeger/proto-gen/api_v2"
 	"google.golang.org/grpc"
 
-	"github.com/open-telemetry/opentelemetry-service/config/configmodels"
 	"github.com/open-telemetry/opentelemetry-service/consumer/consumerdata"
 	"github.com/open-telemetry/opentelemetry-service/consumer/consumererror"
 	"github.com/open-telemetry/opentelemetry-service/exporter"
@@ -31,8 +32,12 @@ import (
 // New returns a new Jaeger gRPC exporter.
 // The exporter name is the name to be used in the observability of the exporter.
 // The collectorEndpoint should be of the form "hostname:14250" (a gRPC target).
-func New(config configmodels.Exporter, collectorEndpoint string) (exporter.TraceExporter, error) {
-	client, err := grpc.Dial(collectorEndpoint, grpc.WithInsecure())
+func New(exporter configmodels.Exporter, config Config, logger *zap.Logger) (exporter.TraceExporter, error) {
+	dialOptions, err := config.TLSSettings.ToGrpcDialOption()
+	if err != nil {
+		return nil, err
+	}
+	client, err := grpc.Dial(config.Endpoint, dialOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +45,11 @@ func New(config configmodels.Exporter, collectorEndpoint string) (exporter.Trace
 	collectorServiceClient := jaegerproto.NewCollectorServiceClient(client)
 	s := &protoGRPCSender{
 		client: collectorServiceClient,
+		logger: logger,
 	}
 
 	exp, err := exporterhelper.NewTraceExporter(
-		config,
+		exporter,
 		s.pushTraceData,
 		exporterhelper.WithTracing(true),
 		exporterhelper.WithMetrics(true))
@@ -55,6 +61,7 @@ func New(config configmodels.Exporter, collectorEndpoint string) (exporter.Trace
 // format, to a grpc server.
 type protoGRPCSender struct {
 	client jaegerproto.CollectorServiceClient
+	logger *zap.Logger
 }
 
 func (s *protoGRPCSender) pushTraceData(
@@ -72,6 +79,7 @@ func (s *protoGRPCSender) pushTraceData(
 		&jaegerproto.PostSpansRequest{Batch: *protoBatch})
 
 	if err != nil {
+		s.logger.Error("Error pushing traces", zap.Error(err))
 		droppedSpans = len(protoBatch.Spans)
 	}
 

@@ -12,14 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package jaegergrpcexporter
+package exporter
 
 import (
-	"github.com/open-telemetry/opentelemetry-service/exporter"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/sys/unix"
 )
 
-// Config defines configuration for Jaeger gRPC exporter.
-type Config struct {
-	exporter.SecureExporterSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
-	Endpoint                      string                   `mapstructure:"endpoint"`
+func TestToGrpcDialOption(t *testing.T) {
+	type testCase struct {
+		in  TLSSettings
+		err error
+	}
+
+	testCases := []testCase{
+		{
+			in: TLSSettings{
+				CertPemFile: "/badpath",
+				ServerNameOverride:  "foo.com",
+			},
+			err: &os.PathError{
+				Op:   "open",
+				Path: "/badpath",
+				Err:  unix.ENOENT,
+			},
+		},
+		{
+			in: TLSSettings{
+				UseSecure:true,
+			},
+			err: nil,
+		},
+	}
+
+	for _, c := range testCases {
+		_, err := c.in.ToGrpcDialOption()
+		assert.Equal(t, c.err, err)
+	}
 }

@@ -15,13 +15,11 @@
 package opencensusexporter
 
 import (
-	"crypto/x509"
 	"fmt"
 
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/open-telemetry/opentelemetry-service/compression"
@@ -47,9 +45,11 @@ func (f *Factory) Type() string {
 // CreateDefaultConfig creates the default configuration for exporter.
 func (f *Factory) CreateDefaultConfig() configmodels.Exporter {
 	return &Config{
-		ExporterSettings: configmodels.ExporterSettings{
-			TypeVal: typeStr,
-			NameVal: typeStr,
+		SecureExporterSettings: exporter.SecureExporterSettings{
+			ExporterSettings: configmodels.ExporterSettings{
+				TypeVal: typeStr,
+				NameVal: typeStr,
+			},
 		},
 		Headers: map[string]string{},
 	}
@@ -84,29 +84,12 @@ func (f *Factory) OCAgentOptions(logger *zap.Logger, ocac *Config) ([]ocagent.Ex
 			}
 		}
 	}
-	if ocac.CertPemFile != "" {
-		creds, err := credentials.NewClientTLSFromFile(ocac.CertPemFile, "")
-		if err != nil {
-			return nil, &ocExporterError{
-				code: errUnableToGetTLSCreds,
-				msg:  fmt.Sprintf("OpenCensus exporter unable to read TLS credentials from pem file %q: %v", ocac.CertPemFile, err),
-			}
-		}
-		opts = append(opts, ocagent.WithTLSCredentials(creds))
-	} else if ocac.UseSecure {
-		certPool, err := x509.SystemCertPool()
-		if err != nil {
-			return nil, &ocExporterError{
-				code: errUnableToGetTLSCreds,
-				msg: fmt.Sprintf(
-					"OpenCensus exporter unable to read certificates from system pool: %v", err),
-			}
-		}
-		creds := credentials.NewClientTLSFromCert(certPool, "")
-		opts = append(opts, ocagent.WithTLSCredentials(creds))
-	} else {
-		opts = append(opts, ocagent.WithInsecure())
+	dialOption, err := ocac.TLSSettings.ToGrpcDialOption()
+	if err != nil {
+		return nil, err
 	}
+	opts = append(opts, ocagent.WithGRPCDialOption(dialOption))
+
 	if len(ocac.Headers) > 0 {
 		opts = append(opts, ocagent.WithHeaders(ocac.Headers))
 	}

@@ -28,12 +28,26 @@ Each different supported protocol has its own configuration settings.
 using the gRPC protocol. The valid syntax is described at
 https://github.com/grpc/grpc/blob/master/doc/naming.md
 
+```yaml
+exporters:
+  jaeger-grpc:
+    endpoint: jaeger-all-in-one:14250
+```
+
+* `secure`: whether to enable client transport security for the exporter's gRPC
+connection. See [grpc.WithInsecure()](https://godoc.org/google.golang.org/grpc#WithInsecure).
+Optional.
+
+* `cert-pem-file`: certificate file for TLS credentials of gRPC client. Should
+only be used if `secure` is set to true. Optional.
 Example:
 
 ```yaml
 exporters:
   jaeger-grpc:
     endpoint: jaeger-all-in-one:14250
+    secure: true
+    cert-pem-file: /my/cert/file.pem 
 ```
 
 ## <a name="logging"></a>Logging

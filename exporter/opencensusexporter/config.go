@@ -15,14 +15,13 @@
 package opencensusexporter
 
 import (
+	"github.com/open-telemetry/opentelemetry-service/exporter"
 	"time"
-
-	"github.com/open-telemetry/opentelemetry-service/config/configmodels"
 )
 
 // Config defines configuration for OpenCensus exporter.
 type Config struct {
-	configmodels.ExporterSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
+	exporter.SecureExporterSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 
 	// The target to which the exporter is going to send traces or metrics,
 	// using the gRPC protocol. The valid syntax is described at
@@ -38,14 +37,6 @@ type Config struct {
 
 	// The number of workers that send the gRPC requests.
 	NumWorkers int `mapstructure:"num-workers"`
-
-	// certificate file for TLS credentials of gRPC client. Should
-	// only be used if `secure` is set to true.
-	CertPemFile string `mapstructure:"cert-pem-file"`
-
-	// Whether to enable client transport security for the exporter's gRPC
-	// connection. See [grpc.WithInsecure()](https://godoc.org/google.golang.org/grpc#WithInsecure).
-	UseSecure bool `mapstructure:"secure,omitempty"`
 
 	// The time period between each reconnection performed by the exporter.
 	ReconnectionDelay time.Duration `mapstructure:"reconnection-delay,omitempty"`

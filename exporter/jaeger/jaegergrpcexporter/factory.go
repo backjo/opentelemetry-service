@@ -41,9 +41,11 @@ func (f *Factory) Type() string {
 // CreateDefaultConfig creates the default configuration for exporter.
 func (f *Factory) CreateDefaultConfig() configmodels.Exporter {
 	return &Config{
-		ExporterSettings: configmodels.ExporterSettings{
-			TypeVal: typeStr,
-			NameVal: typeStr,
+		SecureExporterSettings: exporter.SecureExporterSettings{
+			ExporterSettings: configmodels.ExporterSettings{
+				TypeVal: typeStr,
+				NameVal: typeStr,
+			},
 		},
 	}
 }
@@ -63,7 +65,7 @@ func (f *Factory) CreateTraceExporter(
 		return nil, err
 	}
 
-	exp, err := New(config, expCfg.Endpoint)
+	exp, err := New(config, *expCfg, logger)
 	if err != nil {
 		return nil, err
 	}
